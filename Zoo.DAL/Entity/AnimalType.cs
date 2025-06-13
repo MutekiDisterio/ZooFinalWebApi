@@ -8,12 +8,11 @@ namespace Zoo.DAL.Entity
 {
     public class AnimalType
     {
-        public int Id { get; set; } // SERIAL PRIMARY KEY
-        public string AnimalTypeName { get; set; } = string.Empty; // AnimalType VARCHAR(30) NOT NULL (змінено назву для уникнення конфлікту)
+        public int Id { get; set; } 
+        public string AnimalTypeName { get; set; } = string.Empty;
 
-        // Навігаційна властивість для зв'язку з клітками (один тип тварин може бути пов'язаний з багатьма клітками)
         public ICollection<Cage>? Cages { get; set; }
-        // Навігаційна властивість для зв'язку з тваринами (один тип тварин може мати багато тварин)
+      
         public ICollection<Animal>? Animals { get; set; }
     }
 }

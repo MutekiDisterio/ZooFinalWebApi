@@ -8,10 +8,10 @@ namespace Zoo.DAL.Entity
 {
     public class VolunteerDepartment
     {
-        public int Id { get; set; } // SERIAL PRIMARY KEY
-        public string DepartmentName { get; set; } = string.Empty; // VARCHAR(30) NOT NULL
+        public int Id { get; set; } 
+        public string DepartmentName { get; set; } = string.Empty; 
 
-        // Навігаційна властивість для зв'язку з волонтерами
+       
         public ICollection<Volunteer>? Volunteers { get; set; }
     }
 }
