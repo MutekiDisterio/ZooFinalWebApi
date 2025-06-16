@@ -1,30 +1,26 @@
 using Microsoft.EntityFrameworkCore;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
+using Serilog;
+using Zoo.BLL;
+using Zoo.DAL;
 using Zoo.DAL.Data;
-using Zoo.DAL.UOW;
-using Zoo.DAL.UOW.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Налаштування Serilog (потрібно додати пакет Serilog.AspNetCore)
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext()
+);
+
+// Додаємо DAL і BLL
+builder.Services.AddDataAccess(builder.Configuration);
+builder.Services.AddBusinessLogic();
+
 builder.Services.AddControllers();
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ZooManagementContext>(options =>
-    options.UseNpgsql(connectionString));
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped<IOwnerRepository, OwnerRepository>();
-builder.Services.AddScoped<IAnimalRepository, AnimalRepository>();
-builder.Services.AddScoped<IAnimalTypeRepository, AnimalTypeRepository>();
-builder.Services.AddScoped<ICageRepository, CageRepository>();
-builder.Services.AddScoped<IAnimalCageRepository, AnimalCageRepository>();
-builder.Services.AddScoped<IVolunteerRepository, VolunteerRepository>();
-builder.Services.AddScoped<IVolunteerDepartmentRepository, VolunteerDepartmentRepository>();
-
-
-
-
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
@@ -41,6 +37,9 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred while migrating or seeding the database.");
     }
 }
+
+
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -50,7 +49,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
 
 app.MapControllers();
 
