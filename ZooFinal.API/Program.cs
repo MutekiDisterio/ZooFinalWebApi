@@ -1,9 +1,13 @@
 using Mapster;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Zoo.BLL.Validators;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Zoo.BLL;
 using Zoo.BLL.Configuration;
+using Zoo.BLL.Validators;
 using Zoo.DAL;
 using Zoo.DAL.Data;
 
@@ -17,6 +21,10 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
 
 MapsterConfig.RegisterMappings();
 
+
+builder.Services.AddValidatorsFromAssemblyContaining<AnimalCreateDtoValidator>();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddDataAccess(builder.Configuration);
 builder.Services.AddBusinessLogic();
 builder.Services.AddControllers();
