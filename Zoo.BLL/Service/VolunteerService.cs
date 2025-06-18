@@ -1,10 +1,21 @@
 ﻿using Mapster;
+using Microsoft.EntityFrameworkCore;
 using Zoo.BLL.DTOs.Volunteers;
 using Zoo.BLL.Services.Interfaces;
 using Zoo.DAL.Entity;
 using Zoo.DAL.UOW.Interfaces;
+using Zoo.BLL.DTOs;
 
 namespace Zoo.BLL.Services;
+
+public class VolunteerQueryParameters
+{
+    public int PageNumber { get; set; } = 1;
+    public int PageSize { get; set; } = 10;
+
+    public string? OrderBy { get; set; }
+    public string? Name { get; set; }
+}
 
 public class VolunteerService : IVolunteerService
 {
@@ -13,6 +24,40 @@ public class VolunteerService : IVolunteerService
     public VolunteerService(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
+    }
+
+    public async Task<PagedResult<VolunteerReadDto>> GetPagedAsync(VolunteerQueryParameters parameters, CancellationToken cancellationToken = default)
+    {
+        var query = _unitOfWork.Volunteers.GetAllQueryable();
+
+        if (!string.IsNullOrWhiteSpace(parameters.Name))
+            query = query.Where(v => v.Name.Contains(parameters.Name));
+
+        query = parameters.OrderBy?.ToLower() switch
+        {
+            "name" => query.OrderBy(v => v.Name),
+            "name_desc" => query.OrderByDescending(v => v.Name),
+            "id" => query.OrderBy(v => v.Id),
+            "id_desc" => query.OrderByDescending(v => v.Id),
+            _ => query.OrderBy(v => v.Id),
+        };
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var entities = await query
+            .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+            .Take(parameters.PageSize)
+            .ToListAsync(cancellationToken);
+
+        var dtos = entities.Adapt<List<VolunteerReadDto>>();
+
+        return new PagedResult<VolunteerReadDto>
+        {
+            Items = dtos,
+            TotalCount = totalCount,
+            PageNumber = parameters.PageNumber,
+            PageSize = parameters.PageSize
+        };
     }
 
     public async Task<IEnumerable<VolunteerReadDto>> GetAllAsync(CancellationToken cancellationToken = default)

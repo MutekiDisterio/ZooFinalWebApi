@@ -10,6 +10,11 @@ namespace Zoo.DAL.Repositories
         protected readonly ZooManagementContext _context;
         protected readonly DbSet<TEntity> _dbSet;
 
+        public IQueryable<TEntity> GetAllQueryable()
+        {
+            return _context.Set<TEntity>().AsNoTracking();
+        }
+
         public GenericRepository(ZooManagementContext context)
         {
             _context = context;

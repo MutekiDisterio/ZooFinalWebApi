@@ -17,6 +17,7 @@ namespace Zoo.DAL.Repositories.Interfaces
         Task DeleteByIdAsync(int id);
         Task DeleteAsync(TEntity entity);
         void Update(TEntity entity);
+        IQueryable<TEntity> GetAllQueryable();
         IQueryable<TEntity> FindAll();
         Task<IQueryable<TEntity>> FindByCondotion(Expression<Func<TEntity, bool>> expression);
     }

@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Zoo.BLL.DTOs.Animals;
 using Zoo.BLL.Services.Interfaces;
+using Zoo.DAL.Entity.HelpModels;
+using Zoo.BLL.DTOs;
+using System.Threading;
 
 namespace Zoo.API.Controllers
 {
@@ -16,39 +19,32 @@ namespace Zoo.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AnimalReadDto>>> GetAll(CancellationToken ct)
+        public async Task<ActionResult<PagedResult<AnimalReadDto>>> GetAll([FromQuery] AnimalQueryParameters queryParameters, CancellationToken ct)
         {
-            var animals = await _animalService.GetAllAsync(ct);
-            return Ok(animals);
+            var result = await _animalService.GetPagedAsync(queryParameters, ct);
+            return Ok(result);
         }
 
         [HttpGet("{id:int}")]
         public async Task<ActionResult<AnimalReadDto>> GetById(int id, CancellationToken ct)
         {
-            var animal = await _animalService.GetByIdAsync(id, ct);
-            if (animal == null)
-                return NotFound();
-            return Ok(animal);
+            var dto = await _animalService.GetByIdAsync(id, ct);
+            return dto == null ? NotFound() : Ok(dto);
         }
 
         [HttpPost]
         public async Task<ActionResult<AnimalReadDto>> Create([FromBody] AnimalCreateDto dto, CancellationToken ct)
         {
-            var createdAnimal = await _animalService.CreateAsync(dto, ct);
-            return CreatedAtAction(nameof(GetById), new { id = createdAnimal.Id }, createdAnimal);
+            var created = await _animalService.CreateAsync(dto, ct);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpPut("{id:int}")]
         public async Task<ActionResult<AnimalReadDto>> Update(int id, [FromBody] AnimalUpdateDto dto, CancellationToken ct)
         {
-            if (id != dto.Id)
-                return BadRequest("Id in URL and DTO must match.");
-
-            var updatedAnimal = await _animalService.UpdateAsync(id, dto, ct);
-            if (updatedAnimal == null)
-                return NotFound();
-
-            return Ok(updatedAnimal);
+            if (id != dto.Id) return BadRequest("ID mismatch");
+            var updated = await _animalService.UpdateAsync(id, dto, ct);
+            return updated == null ? NotFound() : Ok(updated);
         }
 
         [HttpDelete("{id:int}")]

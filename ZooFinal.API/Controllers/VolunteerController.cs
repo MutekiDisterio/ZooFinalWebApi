@@ -1,6 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Zoo.BLL.DTOs.Volunteers;
 using Zoo.BLL.Services.Interfaces;
+using Zoo.DAL.Entity.HelpModels;
+using Zoo.BLL.DTOs;
+using System.Threading;
+using VolunteerQueryParameters = Zoo.BLL.Services.VolunteerQueryParameters;
 
 namespace Zoo.API.Controllers
 {
@@ -16,19 +20,17 @@ namespace Zoo.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<VolunteerReadDto>>> GetAll(CancellationToken ct)
+        public async Task<ActionResult<PagedResult<VolunteerReadDto>>> GetAll([FromQuery] VolunteerQueryParameters queryParameters, CancellationToken ct)
         {
-            var volunteers = await _volunteerService.GetAllAsync(ct);
-            return Ok(volunteers);
+            var result = await _volunteerService.GetPagedAsync(queryParameters, ct);
+            return Ok(result);
         }
 
         [HttpGet("{id:int}")]
         public async Task<ActionResult<VolunteerReadDto>> GetById(int id, CancellationToken ct)
         {
-            var volunteer = await _volunteerService.GetByIdAsync(id, ct);
-            if (volunteer == null)
-                return NotFound();
-            return Ok(volunteer);
+            var dto = await _volunteerService.GetByIdAsync(id, ct);
+            return dto == null ? NotFound() : Ok(dto);
         }
 
         [HttpPost]
@@ -41,14 +43,9 @@ namespace Zoo.API.Controllers
         [HttpPut("{id:int}")]
         public async Task<ActionResult<VolunteerReadDto>> Update(int id, [FromBody] VolunteerUpdateDto dto, CancellationToken ct)
         {
-            if (id != dto.Id)
-                return BadRequest("Id in URL and DTO must match.");
-
+            if (id != dto.Id) return BadRequest("ID mismatch");
             var updated = await _volunteerService.UpdateAsync(id, dto, ct);
-            if (updated == null)
-                return NotFound();
-
-            return Ok(updated);
+            return updated == null ? NotFound() : Ok(updated);
         }
 
         [HttpDelete("{id:int}")]

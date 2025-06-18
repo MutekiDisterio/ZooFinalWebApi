@@ -1,5 +1,6 @@
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Serilog;
 using Zoo.BLL;
 using Zoo.BLL.Configuration;
@@ -19,9 +20,21 @@ MapsterConfig.RegisterMappings();
 builder.Services.AddDataAccess(builder.Configuration);
 builder.Services.AddBusinessLogic();
 builder.Services.AddControllers();
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Zoo API",
+        Version = "v1"
+    });
+});
+
+
+
+
 
 var app = builder.Build();
 
@@ -49,4 +62,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+  c.SwaggerEndpoint("/swagger/v1/swagger.json", "Zoo API V1"));
+
 app.Run();

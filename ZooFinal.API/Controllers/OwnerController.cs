@@ -1,6 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Zoo.BLL.DTOs.Owners;
+using Zoo.BLL.Services;
 using Zoo.BLL.Services.Interfaces;
+using Zoo.DAL.Entity.HelpModels;
+using Zoo.BLL.DTOs;
+using System.Threading;
+using OwnerQueryParameters = Zoo.BLL.Services.OwnerQueryParameters;
+
 
 namespace Zoo.API.Controllers
 {
@@ -16,17 +22,17 @@ namespace Zoo.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<OwnerReadDto>>> GetAll(CancellationToken ct)
+        public async Task<ActionResult<PagedResult<OwnerReadDto>>> GetAll([FromQuery] OwnerQueryParameters queryParameters, CancellationToken ct)
         {
-            var list = await _ownerService.GetAllAsync(ct);
-            return Ok(list);
+            var result = await _ownerService.GetPagedAsync(queryParameters, ct);
+            return Ok(result);
         }
 
         [HttpGet("{id:int}")]
         public async Task<ActionResult<OwnerReadDto>> GetById(int id, CancellationToken ct)
         {
             var dto = await _ownerService.GetByIdAsync(id, ct);
-            return dto is null ? NotFound() : Ok(dto);
+            return dto == null ? NotFound() : Ok(dto);
         }
 
         [HttpPost]
@@ -39,16 +45,16 @@ namespace Zoo.API.Controllers
         [HttpPut("{id:int}")]
         public async Task<ActionResult<OwnerReadDto>> Update(int id, [FromBody] OwnerUpdateDto dto, CancellationToken ct)
         {
-            if (id != dto.Id) return BadRequest("ID in URL and payload must match.");
-
+            if (id != dto.Id) return BadRequest("ID mismatch");
             var updated = await _ownerService.UpdateAsync(id, dto, ct);
-            return updated is null ? NotFound() : Ok(updated);
+            return updated == null ? NotFound() : Ok(updated);
         }
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id, CancellationToken ct)
         {
-            return await _ownerService.DeleteAsync(id, ct) ? NoContent() : NotFound();
+            var deleted = await _ownerService.DeleteAsync(id, ct);
+            return deleted ? NoContent() : NotFound();
         }
     }
 }
