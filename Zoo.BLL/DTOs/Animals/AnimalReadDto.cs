@@ -14,7 +14,7 @@ namespace Zoo.BLL.DTOs.Animals
         public int? OwnerId { get; set; }
         public int AnimalTypeId { get; set; }
 
-        public string? OwnerName { get; set; }             // ← додати
-        public string AnimalTypeName { get; set; } = "";   // ← додати
+        public string? OwnerName { get; set; }             
+        public string AnimalTypeName { get; set; } = "";   
     }
 }

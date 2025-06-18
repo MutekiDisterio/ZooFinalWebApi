@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using Zoo.BLL.DTOs.AnimalTypes;
 using Zoo.BLL.Services.Interfaces;
 using Zoo.DAL.Entity;
@@ -9,44 +9,43 @@ namespace Zoo.BLL.Services;
 public class AnimalTypeService : IAnimalTypeService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
 
-    public AnimalTypeService(IUnitOfWork unitOfWork, IMapper mapper)
+    public AnimalTypeService(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
 
     public async Task<IEnumerable<AnimalTypeReadDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var entities = await _unitOfWork.AnimalTypes.GetAllAsync();
-        return _mapper.Map<IEnumerable<AnimalTypeReadDto>>(entities);
+        var entities = await _unitOfWork.AnimalTypes.GetAllAsync(cancellationToken);
+        return entities.Adapt<IEnumerable<AnimalTypeReadDto>>();
     }
 
     public async Task<AnimalTypeReadDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await _unitOfWork.AnimalTypes.GetByIdAsync(id);
-        return entity is null ? null : _mapper.Map<AnimalTypeReadDto>(entity);
+        return entity?.Adapt<AnimalTypeReadDto>();
     }
 
     public async Task<AnimalTypeReadDto> CreateAsync(AnimalTypeCreateDto dto, CancellationToken cancellationToken = default)
     {
-        var entity = _mapper.Map<AnimalType>(dto);
+        var entity = dto.Adapt<AnimalType>();
         await _unitOfWork.AnimalTypes.AddAsync(entity);
         await _unitOfWork.SaveAsync();
-        return _mapper.Map<AnimalTypeReadDto>(entity);
+        return entity.Adapt<AnimalTypeReadDto>();
     }
 
     public async Task<AnimalTypeReadDto> UpdateAsync(int id, AnimalTypeUpdateDto dto, CancellationToken cancellationToken = default)
     {
         var entity = await _unitOfWork.AnimalTypes.GetByIdAsync(id);
-        if (entity == null) throw new KeyNotFoundException($"AnimalType with ID={id} not found");
+        if (entity == null)
+            throw new KeyNotFoundException($"AnimalType with ID={id} not found");
 
-        _mapper.Map(dto, entity);
+        dto.Adapt(entity); 
         await _unitOfWork.AnimalTypes.UpdateAsync(entity);
         await _unitOfWork.SaveAsync();
 
-        return _mapper.Map<AnimalTypeReadDto>(entity);
+        return entity.Adapt<AnimalTypeReadDto>();
     }
 
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)

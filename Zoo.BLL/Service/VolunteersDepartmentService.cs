@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using Zoo.BLL.DTOs.VolunteersDepartment;
 using Zoo.BLL.Services.Interfaces;
 using Zoo.DAL.Entity;
@@ -9,44 +9,43 @@ namespace Zoo.BLL.Services;
 public class VolunteersDepartmentService : IVolunteersDepartmentService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
 
-    public VolunteersDepartmentService(IUnitOfWork unitOfWork, IMapper mapper)
+    public VolunteersDepartmentService(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
 
     public async Task<IEnumerable<VolunteersDepartmentReadDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var entities = await _unitOfWork.VolunteerDepartments.GetAllAsync();
-        return _mapper.Map<IEnumerable<VolunteersDepartmentReadDto>>(entities);
+        var entities = await _unitOfWork.VolunteerDepartments.GetAllAsync(cancellationToken);
+        return entities.Adapt<IEnumerable<VolunteersDepartmentReadDto>>();
     }
 
     public async Task<VolunteersDepartmentReadDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await _unitOfWork.VolunteerDepartments.GetByIdAsync(id);
-        return entity is null ? null : _mapper.Map<VolunteersDepartmentReadDto>(entity);
+        return entity is null ? null : entity.Adapt<VolunteersDepartmentReadDto>();
     }
 
     public async Task<VolunteersDepartmentReadDto> CreateAsync(VolunteersDepartmentCreateDto dto, CancellationToken cancellationToken = default)
     {
-        var entity = _mapper.Map<VolunteerDepartment>(dto);
+        var entity = dto.Adapt<VolunteerDepartment>();
         await _unitOfWork.VolunteerDepartments.AddAsync(entity);
-        await _unitOfWork.SaveAsync();
-        return _mapper.Map<VolunteersDepartmentReadDto>(entity);
+        await _unitOfWork.SaveAsync(    );
+        return entity.Adapt<VolunteersDepartmentReadDto>();
     }
 
     public async Task<VolunteersDepartmentReadDto> UpdateAsync(int id, VolunteersDepartmentUpdateDto dto, CancellationToken cancellationToken = default)
     {
         var entity = await _unitOfWork.VolunteerDepartments.GetByIdAsync(id);
-        if (entity == null) throw new KeyNotFoundException($"Department with ID={id} not found");
+        if (entity == null)
+            throw new KeyNotFoundException($"Department with ID={id} not found");
 
-        _mapper.Map(dto, entity);
+        dto.Adapt(entity);
         await _unitOfWork.VolunteerDepartments.UpdateAsync(entity);
         await _unitOfWork.SaveAsync();
 
-        return _mapper.Map<VolunteersDepartmentReadDto>(entity);
+        return entity.Adapt<VolunteersDepartmentReadDto>();
     }
 
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)

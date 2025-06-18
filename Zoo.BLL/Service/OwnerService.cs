@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+﻿using Mapster;
 using Zoo.BLL.DTOs.Owners;
 using Zoo.BLL.Services.Interfaces;
 using Zoo.DAL.Entity;
@@ -10,32 +9,30 @@ namespace Zoo.BLL.Services;
 public class OwnerService : IOwnerService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
 
-    public OwnerService(IUnitOfWork unitOfWork, IMapper mapper)
+    public OwnerService(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
 
     public async Task<IEnumerable<OwnerReadDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var owners = await _unitOfWork.Owners.GetAllAsync();
-        return _mapper.Map<IEnumerable<OwnerReadDto>>(owners);
+        var owners = await _unitOfWork.Owners.GetAllAsync(cancellationToken);
+        return owners.Adapt<IEnumerable<OwnerReadDto>>();
     }
 
     public async Task<OwnerReadDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var owner = await _unitOfWork.Owners.GetByIdAsync(id);
-        return owner is null ? null : _mapper.Map<OwnerReadDto>(owner);
+        return owner is null ? null : owner.Adapt<OwnerReadDto>();
     }
 
     public async Task<OwnerReadDto> CreateAsync(OwnerCreateDto dto, CancellationToken cancellationToken = default)
     {
-        var entity = _mapper.Map<Owner>(dto);
+        var entity = dto.Adapt<Owner>();
         await _unitOfWork.Owners.AddAsync(entity);
-        await _unitOfWork.SaveAsync();
-        return _mapper.Map<OwnerReadDto>(entity);
+        await _unitOfWork.SaveAsync(    );
+        return entity.Adapt<OwnerReadDto>();
     }
 
     public async Task<OwnerReadDto> UpdateAsync(int id, OwnerUpdateDto dto, CancellationToken cancellationToken = default)
@@ -44,11 +41,11 @@ public class OwnerService : IOwnerService
         if (entity == null)
             throw new KeyNotFoundException($"Owner with ID={id} not found");
 
-        _mapper.Map(dto, entity);
+        dto.Adapt(entity);
         await _unitOfWork.Owners.UpdateAsync(entity);
         await _unitOfWork.SaveAsync();
 
-        return _mapper.Map<OwnerReadDto>(entity);
+        return entity.Adapt<OwnerReadDto>();
     }
 
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
@@ -56,7 +53,7 @@ public class OwnerService : IOwnerService
         var entity = await _unitOfWork.Owners.GetByIdAsync(id);
         if (entity == null) return false;
 
-        await _unitOfWork.Owners.DeleteAsync(entity);
+        await _unitOfWork.Owners.DeleteAsync(entity     );
         await _unitOfWork.SaveAsync();
         return true;
     }

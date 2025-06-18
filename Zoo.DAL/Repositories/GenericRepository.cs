@@ -18,7 +18,12 @@ namespace Zoo.DAL.Repositories
 
         public async Task<IEnumerable<TEntity>> GetAllAsync()
         {
-            return await _dbSet.ToListAsync();
+            return await _dbSet.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken)
+        {
+            return await _dbSet.AsNoTracking().ToListAsync(cancellationToken);
         }
 
         public async Task<TEntity> GetByIdAsync(int id)
@@ -42,6 +47,11 @@ namespace Zoo.DAL.Repositories
             _dbSet.Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
             await Task.CompletedTask;
+        }
+
+        public void Update(TEntity entity)
+        {
+            _dbSet.Update(entity);
         }
 
         public async Task DeleteByIdAsync(int id)

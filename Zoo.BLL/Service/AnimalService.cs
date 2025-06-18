@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using Zoo.BLL.DTOs.Animals;
 using Zoo.BLL.Services.Interfaces;
 using Zoo.DAL.Entity;
@@ -9,32 +9,30 @@ namespace Zoo.BLL.Services;
 public class AnimalService : IAnimalService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
 
-    public AnimalService(IUnitOfWork unitOfWork, IMapper mapper)
+    public AnimalService(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
 
     public async Task<IEnumerable<AnimalReadDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var entities = await _unitOfWork.Animals.GetAllAsync();
-        return _mapper.Map<IEnumerable<AnimalReadDto>>(entities);
+        var animals = await _unitOfWork.Animals.GetAllAsync(cancellationToken);
+        return animals.Adapt<IEnumerable<AnimalReadDto>>();
     }
 
     public async Task<AnimalReadDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await _unitOfWork.Animals.GetByIdAsync(id);
-        return entity is null ? null : _mapper.Map<AnimalReadDto>(entity);
+        return entity is null ? null : entity.Adapt<AnimalReadDto>();
     }
 
     public async Task<AnimalReadDto> CreateAsync(AnimalCreateDto dto, CancellationToken cancellationToken = default)
     {
-        var entity = _mapper.Map<Animal>(dto);
+        var entity = dto.Adapt<Animal>();
         await _unitOfWork.Animals.AddAsync(entity);
         await _unitOfWork.SaveAsync();
-        return _mapper.Map<AnimalReadDto>(entity);
+        return entity.Adapt<AnimalReadDto>();
     }
 
     public async Task<AnimalReadDto> UpdateAsync(int id, AnimalUpdateDto dto, CancellationToken cancellationToken = default)
@@ -42,11 +40,11 @@ public class AnimalService : IAnimalService
         var entity = await _unitOfWork.Animals.GetByIdAsync(id);
         if (entity == null) throw new KeyNotFoundException($"Animal with ID={id} not found");
 
-        _mapper.Map(dto, entity);
+        dto.Adapt(entity); 
         await _unitOfWork.Animals.UpdateAsync(entity);
         await _unitOfWork.SaveAsync();
 
-        return _mapper.Map<AnimalReadDto>(entity);
+        return entity.Adapt<AnimalReadDto>();
     }
 
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)

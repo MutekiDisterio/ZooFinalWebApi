@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using Zoo.BLL.DTOs.Volunteers;
 using Zoo.BLL.Services.Interfaces;
 using Zoo.DAL.Entity;
@@ -9,32 +9,30 @@ namespace Zoo.BLL.Services;
 public class VolunteerService : IVolunteerService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
 
-    public VolunteerService(IUnitOfWork unitOfWork, IMapper mapper)
+    public VolunteerService(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
 
     public async Task<IEnumerable<VolunteerReadDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var volunteers = await _unitOfWork.Volunteers.GetAllAsync();
-        return _mapper.Map<IEnumerable<VolunteerReadDto>>(volunteers);
+        var volunteers = await _unitOfWork.Volunteers.GetAllAsync(cancellationToken);
+        return volunteers.Adapt<IEnumerable<VolunteerReadDto>>();
     }
 
     public async Task<VolunteerReadDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await _unitOfWork.Volunteers.GetByIdAsync(id);
-        return entity is null ? null : _mapper.Map<VolunteerReadDto>(entity);
+        return entity is null ? null : entity.Adapt<VolunteerReadDto>();
     }
 
     public async Task<VolunteerReadDto> CreateAsync(VolunteerCreateDto dto, CancellationToken cancellationToken = default)
     {
-        var entity = _mapper.Map<Volunteer>(dto);
+        var entity = dto.Adapt<Volunteer>();
         await _unitOfWork.Volunteers.AddAsync(entity);
         await _unitOfWork.SaveAsync();
-        return _mapper.Map<VolunteerReadDto>(entity);
+        return entity.Adapt<VolunteerReadDto>();
     }
 
     public async Task<VolunteerReadDto> UpdateAsync(int id, VolunteerUpdateDto dto, CancellationToken cancellationToken = default)
@@ -42,11 +40,11 @@ public class VolunteerService : IVolunteerService
         var entity = await _unitOfWork.Volunteers.GetByIdAsync(id);
         if (entity == null) throw new KeyNotFoundException($"Volunteer with ID={id} not found");
 
-        _mapper.Map(dto, entity);
+        dto.Adapt(entity);
         await _unitOfWork.Volunteers.UpdateAsync(entity);
         await _unitOfWork.SaveAsync();
 
-        return _mapper.Map<VolunteerReadDto>(entity);
+        return entity.Adapt<VolunteerReadDto>();
     }
 
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)

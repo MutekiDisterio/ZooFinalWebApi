@@ -16,7 +16,7 @@ namespace Zoo.BLL.DTOs.Volunteers
         public int DepartmentId { get; set; }
 
 
-        public string? AnimalName { get; set; }            // ← додати
+        public string? AnimalName { get; set; }            
         public string DepartmentName { get; set; } = "";
     }
 }
