@@ -3,6 +3,7 @@ using Zoo.BLL.DTOs.VolunteersDepartment;
 using Zoo.BLL.Services.Interfaces;
 using Zoo.DAL.Entity;
 using Zoo.DAL.UOW.Interfaces;
+using Zoo.BLL.Exceptions; 
 
 namespace Zoo.BLL.Services;
 
@@ -21,17 +22,20 @@ public class VolunteersDepartmentService : IVolunteersDepartmentService
         return entities.Adapt<IEnumerable<VolunteersDepartmentReadDto>>();
     }
 
-    public async Task<VolunteersDepartmentReadDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<VolunteersDepartmentReadDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await _unitOfWork.VolunteerDepartments.GetByIdAsync(id);
-        return entity is null ? null : entity.Adapt<VolunteersDepartmentReadDto>();
+        if (entity == null)
+            throw new NotFoundException($"Department with ID={id} not found.");
+
+        return entity.Adapt<VolunteersDepartmentReadDto>();
     }
 
     public async Task<VolunteersDepartmentReadDto> CreateAsync(VolunteersDepartmentCreateDto dto, CancellationToken cancellationToken = default)
     {
         var entity = dto.Adapt<VolunteerDepartment>();
         await _unitOfWork.VolunteerDepartments.AddAsync(entity);
-        await _unitOfWork.SaveAsync(    );
+        await _unitOfWork.SaveAsync();
         return entity.Adapt<VolunteersDepartmentReadDto>();
     }
 
@@ -39,7 +43,7 @@ public class VolunteersDepartmentService : IVolunteersDepartmentService
     {
         var entity = await _unitOfWork.VolunteerDepartments.GetByIdAsync(id);
         if (entity == null)
-            throw new KeyNotFoundException($"Department with ID={id} not found");
+            throw new NotFoundException($"Department with ID={id} not found.");
 
         dto.Adapt(entity);
         await _unitOfWork.VolunteerDepartments.UpdateAsync(entity);
@@ -51,7 +55,8 @@ public class VolunteersDepartmentService : IVolunteersDepartmentService
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await _unitOfWork.VolunteerDepartments.GetByIdAsync(id);
-        if (entity == null) return false;
+        if (entity == null)
+            throw new NotFoundException($"Department with ID={id} not found.");
 
         await _unitOfWork.VolunteerDepartments.DeleteAsync(entity);
         await _unitOfWork.SaveAsync();

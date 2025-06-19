@@ -1,10 +1,10 @@
-using Mapster;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Zoo.BLL.Validators;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Zoo.API.Middlewares;
 using Zoo.BLL;
 using Zoo.BLL.Configuration;
 using Zoo.BLL.Validators;
@@ -45,6 +45,8 @@ builder.Services.AddSwaggerGen(c =>
 
 
 var app = builder.Build();
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+
 
 using (var scope = app.Services.CreateScope())
 {
